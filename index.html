@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نظام إدارة المكتب الهندسي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Zain:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#16243C;
+    --navy-2:#1E3358;
+    --steel:#2B4C7E;
+    --amber:#E2A03F;
+    --amber-dark:#B87A1F;
+    --paper:#EEEAE2;
+    --card:#FFFFFF;
+    --ink:#20242B;
+    --ink-soft:#5B6472;
+    --line:#DCD6C9;
+    --danger:#B4472A;
+    --success:#3F7D58;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Tajawal',sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    min-height:100vh;
+  }
+  #app{min-height:100vh;}
+
+  /* ---------- Login ---------- */
+  .login-wrap{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:
+      linear-gradient(var(--navy),var(--navy)),
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.045) 0 1px, transparent 1px 40px),
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.045) 0 1px, transparent 1px 40px);
+    padding:24px;
+  }
+  .login-card{
+    background:var(--card);
+    width:100%;
+    max-width:380px;
+    border-radius:4px;
+    padding:36px 32px 30px;
+    box-shadow:0 20px 50px rgba(0,0,0,0.35);
+    border-top:5px solid var(--amber);
+  }
+  .brand-mark{
+    display:flex;align-items:center;gap:10px;margin-bottom:6px;
+  }
+  .brand-mark .sq{width:14px;height:14px;background:var(--amber);}
+  .brand-mark .sq2{width:14px;height:14px;background:var(--navy);margin-inline-start:-4px;}
+  .login-card h1{
+    font-size:21px;font-weight:900;margin:14px 0 2px;color:var(--navy);
+  }
+  .login-card p.sub{color:var(--ink-soft);font-size:13.5px;margin:0 0 24px;}
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:12.5px;color:var(--ink-soft);margin-bottom:6px;font-weight:700;}
+  .field input, .field select, .field textarea{
+    width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:3px;
+    font-family:inherit;font-size:14.5px;background:#FBFAF7;color:var(--ink);
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{
+    outline:none;border-color:var(--steel);background:#fff;
+  }
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    padding:10px 18px;border-radius:3px;border:none;cursor:pointer;
+    font-family:inherit;font-weight:700;font-size:14px;transition:filter .12s ease;
+  }
+  .btn:active{filter:brightness(0.92);}
+  .btn-primary{background:var(--navy);color:#fff;width:100%;padding:12px;}
+  .btn-primary:hover{background:var(--navy-2);}
+  .btn-amber{background:var(--amber);color:var(--navy);}
+  .btn-amber:hover{background:var(--amber-dark);color:#fff;}
+  .btn-ghost{background:transparent;color:var(--ink-soft);border:1.5px solid var(--line);}
+  .btn-ghost:hover{border-color:var(--ink-soft);color:var(--ink);}
+  .btn-danger{background:#fff;color:var(--danger);border:1.5px solid var(--danger);}
+  .btn-danger:hover{background:var(--danger);color:#fff;}
+  .btn-sm{padding:6px 12px;font-size:13px;}
+  .err{color:var(--danger);font-size:13px;margin:-8px 0 14px;font-weight:700;}
+
+  /* ---------- Main layout ---------- */
+  .layout{display:flex;min-height:100vh;}
+  .sidebar{
+    width:236px;flex-shrink:0;background:var(--navy);color:#EDEBE6;
+    display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;
+  }
+  .sidebar .brand{padding:22px 20px 16px;border-bottom:1px solid rgba(255,255,255,0.1);}
+  .sidebar .brand .sq{width:12px;height:12px;background:var(--amber);display:inline-block;margin-inline-end:8px;}
+  .sidebar .brand b{font-size:15px;letter-spacing:.3px;}
+  .sidebar .brand small{display:block;color:#9AA6B8;font-size:11.5px;margin-top:4px;}
+  .nav{padding:10px 0;flex:1;}
+  .nav a{
+    display:block;padding:11px 22px;color:#C7CEDA;text-decoration:none;font-size:14px;
+    font-weight:500;border-inline-start:3px solid transparent;cursor:pointer;
+  }
+  .nav a:hover{background:rgba(255,255,255,0.05);color:#fff;}
+  .nav a.active{border-inline-start-color:var(--amber);background:rgba(255,255,255,0.07);color:#fff;font-weight:700;}
+  .nav .grp-label{padding:16px 22px 6px;font-size:11px;color:#7C8AA0;font-weight:700;letter-spacing:.4px;}
+  .sidebar-foot{padding:14px 20px;border-top:1px solid rgba(255,255,255,0.1);font-size:12.5px;color:#9AA6B8;}
+  .sidebar-foot b{color:#fff;display:block;font-size:13.5px;margin-bottom:2px;}
+
+  .main{flex:1;min-width:0;}
+  .topbar{
+    background:#fff;border-bottom:1px solid var(--line);padding:16px 28px;
+    display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5;
+  }
+  .topbar h2{margin:0;font-size:19px;font-weight:900;color:var(--navy);}
+  .topbar .user-chip{display:flex;align-items:center;gap:12px;}
+  .user-chip .who{font-size:13px;color:var(--ink-soft);text-align:left;}
+  .user-chip .who b{color:var(--ink);display:block;font-size:13.5px;}
+  .content{padding:24px 28px 60px;}
+
+  .toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
+  .toolbar .filters{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  .toolbar select{padding:8px 10px;border:1.5px solid var(--line);border-radius:3px;font-family:inherit;background:#fff;font-size:13.5px;}
+
+  .cards-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:22px;}
+  .stat-card{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:16px 18px;border-top:3px solid var(--steel);}
+  .stat-card.amber{border-top-color:var(--amber);}
+  .stat-card.danger{border-top-color:var(--danger);}
+  .stat-card.success{border-top-color:var(--success);}
+  .stat-card .n{font-size:26px;font-weight:900;color:var(--navy);}
+  .stat-card .l{font-size:12.5px;color:var(--ink-soft);margin-top:2px;}
+
+  table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:4px;overflow:hidden;}
+  thead th{background:#F4F1E9;color:var(--navy);text-align:right;font-size:12.5px;font-weight:800;padding:11px 14px;border-bottom:2px solid var(--line);}
+  tbody td{padding:11px 14px;font-size:13.5px;border-bottom:1px solid var(--line);color:var(--ink);}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:#FAF9F5;}
+  .empty-row td{text-align:center;color:var(--ink-soft);padding:34px;font-size:14px;}
+  .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:700;background:#EAE6DA;color:var(--ink-soft);}
+  .badge.ok{background:#E2EFE6;color:var(--success);}
+  .badge.warn{background:#FBF0DC;color:var(--amber-dark);}
+  .badge.bad{background:#F6E0D8;color:var(--danger);}
+  .row-actions{display:flex;gap:6px;justify-content:flex-end;}
+  .link-btn{background:none;border:none;color:var(--steel);cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:700;padding:4px 6px;}
+  .link-btn:hover{text-decoration:underline;}
+  .link-btn.danger{color:var(--danger);}
+
+  .no-access{
+    background:#fff;border:1px dashed var(--line);border-radius:4px;padding:40px;text-align:center;color:var(--ink-soft);
+  }
+
+  /* modal */
+  .overlay{position:fixed;inset:0;background:rgba(22,36,60,0.55);display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;z-index:50;overflow-y:auto;}
+  .modal{background:#fff;border-radius:4px;width:100%;max-width:560px;padding:26px 26px 22px;border-top:5px solid var(--navy);}
+  .modal h3{margin:0 0 18px;font-size:17px;color:var(--navy);font-weight:900;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .form-grid .full{grid-column:1 / -1;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;border-top:1px solid var(--line);padding-top:16px;}
+  .perm-table{width:100%;border-collapse:collapse;margin-top:6px;}
+  .perm-table th{font-size:11.5px;color:var(--ink-soft);text-align:center;padding:6px 4px;font-weight:700;}
+  .perm-table td{padding:6px 4px;font-size:12.5px;text-align:center;border-top:1px solid var(--line);}
+  .perm-table td:first-child{text-align:right;font-weight:700;color:var(--ink);}
+  .perm-table select{width:100%;padding:5px 4px;font-size:12px;border:1px solid var(--line);border-radius:3px;}
+
+  .section-note{font-size:12.5px;color:var(--ink-soft);background:#F4F1E9;border:1px dashed var(--line);padding:10px 12px;border-radius:3px;margin-bottom:16px;}
+
+  @media (max-width:820px){
+    .sidebar{position:fixed;right:0;top:0;transform:translateX(100%);transition:transform .2s ease;z-index:40;box-shadow:-6px 0 20px rgba(0,0,0,0.3);}
+    .sidebar.open{transform:translateX(0);}
+    .topbar{padding:14px 16px;}
+    .content{padding:16px;}
+    .form-grid{grid-template-columns:1fr;}
+    .menu-btn{display:inline-flex !important;}
+  }
+  .menu-btn{display:none;background:none;border:1.5px solid var(--line);border-radius:3px;padding:7px 10px;cursor:pointer;font-size:16px;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ===================== Supabase connection =====================
+   1) Create a free project at https://supabase.com
+   2) Run the SQL from the setup guide to create the "erp_data" table
+   3) Paste your Project URL and anon public key below
+================================================================== */
+const SUPABASE_URL = "https://nmgsjxqreqslztsoiizl.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_tzyPA5H_Ho_GtiEYbDvF3w_4qM63I9k";
+const SUPABASE_CONFIGURED = !SUPABASE_URL.includes('PASTE_') && !SUPABASE_ANON_KEY.includes('PASTE_');
+let supabaseClient = null;
+if(SUPABASE_CONFIGURED){
+  try{ supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }
+  catch(e){ console.error('supabase init error', e); }
+}
+
+/* ===================== Storage layer ===================== */
+async function dbGet(key, fallback){
+  if(!supabaseClient) return fallback;
+  try{
+    const { data, error } = await supabaseClient
+      .from('erp_data').select('value').eq('key', key).maybeSingle();
+    if(error || !data) return fallback;
+    return data.value;
+  }catch(e){ console.error('load error', e); return fallback; }
+}
+async function dbSet(key, value){
+  if(!supabaseClient){ alert('قاعدة البيانات غير متصلة بعد.'); return; }
+  try{
+    const { error } = await supabaseClient
+      .from('erp_data')
+      .upsert({ key, value, updated_at: new Date().toISOString() });
+    if(error){ console.error('save error', error); alert('تعذر حفظ البيانات: ' + error.message); }
+  }catch(e){ console.error('save error', e); alert('تعذر حفظ البيانات: ' + (e && e.message ? e.message : e)); }
+}
+function genId(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+
+/* ===================== State ===================== */
+const PERM_KEYS = ['projects','details','engineer','techoffice','warehouse','finance','extracts','contracts'];
+const PERM_LABELS = {
+  projects:'المشاريع', details:'تفاصيل المشروع', engineer:'المهندس المدني', techoffice:'المكتب الفني',
+  warehouse:'المخزن', finance:'الماليات', extracts:'المستخلصات', contracts:'العقود'
+};
+
+let STATE = {
+  users:[], projects:[], phases:[], siteReports:[], techOffice:[],
+  warehouseItems:[], warehouseTx:[], finance:[], extracts:[], contracts:[]
+};
+let currentUser = null;
+let currentRoute = 'dashboard';
+let modalState = null; // {moduleKey, record}
+let sidebarOpen = false;
+let projectFilter = {}; // per moduleKey selected projectId
+
+const MODULES = {
+  projects:{
+    title:'المشاريع', permKey:'projects',
+    fields:[
+      {name:'name',label:'اسم المشروع',type:'text',required:true},
+      {name:'client',label:'العميل / المالك',type:'text'},
+      {name:'location',label:'الموقع',type:'text'},
+      {name:'status',label:'الحالة',type:'select',options:['لم يبدأ','قيد التنفيذ','متوقف مؤقتاً','منتهي']},
+      {name:'budget',label:'الميزانية التقديرية',type:'number'},
+      {name:'startDate',label:'تاريخ البدء',type:'date'},
+      {name:'endDate',label:'تاريخ الانتهاء المتوقع',type:'date'},
+      {name:'notes',label:'ملاحظات',type:'textarea'}
+    ],
+    columns:[['name','المشروع'],['client','العميل'],['status','الحالة'],['budget','الميزانية']]
+  },
+  phases:{
+    title:'تفاصيل المشروع — المراحل والإنجاز', permKey:'details', hasProject:true,
+    fields:[
+      {name:'phase',label:'اسم المرحلة',type:'text',required:true},
+      {name:'percent',label:'نسبة الإنجاز %',type:'number'},
+      {name:'date',label:'تاريخ التحديث',type:'date'},
+      {name:'description',label:'الوصف',type:'textarea'}
+    ],
+    columns:[['phase','المرحلة'],['percent','% الإنجاز'],['date','التاريخ']]
+  },
+  siteReports:{
+    title:'المهندس المدني — تقارير الموقع اليومية', permKey:'engineer', hasProject:true,
+    fields:[
+      {name:'engineerName',label:'اسم المهندس',type:'text',required:true},
+      {name:'date',label:'التاريخ',type:'date',required:true},
+      {name:'weather',label:'حالة الطقس',type:'select',options:['مشمس','غائم','ممطر','عاصف']},
+      {name:'laborCount',label:'عدد العمالة',type:'number'},
+      {name:'workDone',label:'الأعمال المنفذة اليوم',type:'textarea'},
+      {name:'notes',label:'ملاحظات / مشاكل',type:'textarea'}
+    ],
+    columns:[['date','التاريخ'],['engineerName','المهندس'],['laborCount','العمالة']]
+  },
+  techOffice:{
+    title:'المكتب الفني — الرسومات والمستندات', permKey:'techoffice', hasProject:true,
+    fields:[
+      {name:'title',label:'العنوان',type:'text',required:true},
+      {name:'type',label:'النوع',type:'select',options:['رسم تنفيذي','مستخلص كميات','طلب موافقة مواد','مواصفات فنية','مخطط شوب دروينج']},
+      {name:'revision',label:'رقم المراجعة',type:'text'},
+      {name:'status',label:'الحالة',type:'select',options:['قيد الإعداد','قيد المراجعة','معتمد','مرفوض']},
+      {name:'date',label:'التاريخ',type:'date'},
+      {name:'notes',label:'ملاحظات',type:'textarea'}
+    ],
+    columns:[['title','العنوان'],['type','النوع'],['status','الحالة'],['date','التاريخ']]
+  },
+  warehouseItems:{
+    title:'المخزن — الأصناف', permKey:'warehouse',
+    fields:[
+      {name:'name',label:'اسم الصنف',type:'text',required:true},
+      {name:'unit',label:'وحدة القياس',type:'text'},
+      {name:'qty',label:'الكمية الحالية',type:'number'},
+      {name:'minQty',label:'حد إعادة الطلب',type:'number'}
+    ],
+    columns:[['name','الصنف'],['unit','الوحدة'],['qty','الكمية'],['minQty','حد الطلب']]
+  },
+  warehouseTx:{
+    title:'المخزن — حركة الوارد والمنصرف', permKey:'warehouse', hasProject:true,
+    fields:[
+      {name:'itemName',label:'اسم الصنف',type:'text',required:true},
+      {name:'type',label:'نوع الحركة',type:'select',options:['وارد','منصرف']},
+      {name:'qty',label:'الكمية',type:'number',required:true},
+      {name:'date',label:'التاريخ',type:'date'},
+      {name:'notes',label:'ملاحظات',type:'textarea'}
+    ],
+    columns:[['date','التاريخ'],['itemName','الصنف'],['type','النوع'],['qty','الكمية']]
+  },
+  finance:{
+    title:'الماليات', permKey:'finance', hasProject:true,
+    fields:[
+      {name:'type',label:'النوع',type:'select',options:['إيراد','مصروف']},
+      {name:'category',label:'البند',type:'text'},
+      {name:'amount',label:'المبلغ',type:'number',required:true},
+      {name:'date',label:'التاريخ',type:'date'},
+      {name:'notes',label:'ملاحظات',type:'textarea'}
+    ],
+    columns:[['date','التاريخ'],['type','النوع'],['category','البند'],['amount','المبلغ']]
+  },
+  extracts:{
+    title:'المستخلصات', permKey:'extracts', hasProject:true,
+    fields:[
+      {name:'number',label:'رقم المستخلص',type:'text',required:true},
+      {name:'date',label:'التاريخ',type:'date'},
+      {name:'amount',label:'قيمة المستخلص',type:'number'},
+      {name:'deductions',label:'الاستقطاعات',type:'number'},
+      {name:'status',label:'الحالة',type:'select',options:['قيد الإعداد','مقدم للعميل','معتمد','مصروف']},
+      {name:'notes',label:'ملاحظات',type:'textarea'}
+    ],
+    columns:[['number','رقم المستخلص'],['date','التاريخ'],['amount','القيمة'],['status','الحالة']]
+  },
+  contracts:{
+    title:'العقود', permKey:'contracts', hasProject:true,
+    fields:[
+      {name:'contractNumber',label:'رقم العقد',type:'text',required:true},
+      {name:'party',label:'الطرف الثاني',type:'text'},
+      {name:'value',label:'قيمة العقد',type:'number'},
+      {name:'startDate',label:'تاريخ البدء',type:'date'},
+      {name:'endDate',label:'تاريخ الانتهاء',type:'date'},
+      {name:'status',label:'الحالة',type:'select',options:['ساري','منتهي','ملغي']},
+      {name:'notes',label:'بنود وملاحظات',type:'textarea'}
+    ],
+    columns:[['contractNumber','رقم العقد'],['party','الطرف الثاني'],['value','القيمة'],['status','الحالة']]
+  }
+};
+
+const NAV = [
+  {key:'dashboard', label:'الرئيسية', special:true},
+  {group:'المشاريع'},
+  {key:'projects', label:'المشاريع', module:'projects'},
+  {key:'phases', label:'تفاصيل المشروع', module:'phases'},
+  {group:'الفني'},
+  {key:'siteReports', label:'المهندس المدني', module:'siteReports'},
+  {key:'techOffice', label:'المكتب الفني', module:'techOffice'},
+  {group:'الموارد'},
+  {key:'warehouseItems', label:'المخزن - الأصناف', module:'warehouseItems'},
+  {key:'warehouseTx', label:'المخزن - الحركة', module:'warehouseTx'},
+  {group:'المالية والعقود'},
+  {key:'finance', label:'الماليات', module:'finance'},
+  {key:'extracts', label:'المستخلصات', module:'extracts'},
+  {key:'contracts', label:'العقود', module:'contracts'},
+  {group:'الإدارة'},
+  {key:'admin', label:'المستخدمون والصلاحيات', adminOnly:true}
+];
+
+/* ===================== Permissions ===================== */
+function permLevel(permKey){
+  if(!currentUser) return 'none';
+  if(currentUser.isAdmin) return 'edit';
+  return (currentUser.permissions && currentUser.permissions[permKey]) || 'none';
+}
+function canView(permKey){ return permLevel(permKey) === 'view' || permLevel(permKey) === 'edit'; }
+function canEdit(permKey){ return permLevel(permKey) === 'edit'; }
+
+/* ===================== Boot ===================== */
+async function boot(){
+  if(SUPABASE_URL.includes('PASTE_') || SUPABASE_ANON_KEY.includes('PASTE_')){
+    document.getElementById('app').innerHTML = `
+      <div class="login-wrap"><div class="login-card">
+        <h1>الإعداد غير مكتمل</h1>
+        <p class="sub">لم يتم توصيل قاعدة البيانات بعد.</p>
+        <div class="section-note">افتح ملف الصفحة وابحث عن السطرين:<br>
+        <b>SUPABASE_URL</b> و <b>SUPABASE_ANON_KEY</b> بالقرب من بداية الكود،
+        وضع فيهما بيانات مشروعك من Supabase كما هو موضح في دليل الإعداد.</div>
+      </div></div>`;
+    return;
+  }
+  let users = await dbGet('users', null);
+  if(!users || users.length === 0){
+    users = [{
+      id:genId(), username:'admin', password:'admin123', name:'مدير النظام',
+      isAdmin:true, permissions:{}
+    }];
+    await dbSet('users', users);
+  }
+  STATE.users = users;
+  render();
+}
+
+async function loadAllData(){
+  STATE.projects = await dbGet('projects', []);
+  STATE.phases = await dbGet('phases', []);
+  STATE.siteReports = await dbGet('siteReports', []);
+  STATE.techOffice = await dbGet('techOffice', []);
+  STATE.warehouseItems = await dbGet('warehouseItems', []);
+  STATE.warehouseTx = await dbGet('warehouseTx', []);
+  STATE.finance = await dbGet('finance', []);
+  STATE.extracts = await dbGet('extracts', []);
+  STATE.contracts = await dbGet('contracts', []);
+}
+
+/* ===================== Login ===================== */
+function loginScreen(err){
+  return `
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="brand-mark"><span class="sq"></span><span class="sq2"></span></div>
+      <h1>نظام إدارة المكتب الهندسي</h1>
+      <p class="sub">تسجيل الدخول للوصول إلى المشاريع والبيانات</p>
+      ${err ? `<div class="err">${err}</div>` : ''}
+      <form id="loginForm">
+        <div class="field"><label>اسم المستخدم</label><input type="text" id="loginUser" required autocomplete="username"></div>
+        <div class="field"><label>كلمة المرور</label><input type="password" id="loginPass" required autocomplete="current-password"></div>
+        <button class="btn btn-primary" type="submit">دخول</button>
+      </form>
+    </div>
+  </div>`;
+}
+
+function attachLoginHandlers(){
+  const f = document.getElementById('loginForm');
+  f.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const u = document.getElementById('loginUser').value.trim();
+    const p = document.getElementById('loginPass').value;
+    const users = await dbGet('users', STATE.users);
+    STATE.users = users;
+    const found = users.find(x=>x.username === u && x.password === p);
+    if(!found){
+      document.getElementById('app').innerHTML = loginScreen('اسم المستخدم أو كلمة المرور غير صحيحة');
+      attachLoginHandlers();
+      return;
+    }
+    currentUser = found;
+    await loadAllData();
+    currentRoute = 'dashboard';
+    render();
+  });
+}
+
+/* ===================== Layout ===================== */
+function firstAllowedRoute(){
+  for(const item of NAV){
+    if(item.special) return item.key;
+  }
+  return 'dashboard';
+}
+
+function navAllowed(item){
+  if(item.group) return true;
+  if(item.special) return true;
+  if(item.adminOnly) return !!currentUser.isAdmin;
+  const mod = MODULES[item.module];
+  return canView(mod.permKey);
+}
+
+function sidebarHTML(){
+  let items = '';
+  for(const item of NAV){
+    if(item.group){ items += `<div class="grp-label">${item.group}</div>`; continue; }
+    if(!navAllowed(item)) continue;
+    items += `<a class="${currentRoute===item.key?'active':''}" onclick="goRoute('${item.key}')">${item.label}</a>`;
+  }
+  return `
+  <div class="sidebar ${sidebarOpen?'open':''}" id="sidebar">
+    <div class="brand"><span class="sq"></span><b>المكتب الهندسي</b><small>نظام إدارة المشاريع</small></div>
+    <div class="nav">${items}</div>
+    <div class="sidebar-foot"><b>${currentUser.name}</b>${currentUser.isAdmin?'مدير النظام':'مستخدم'}</div>
+  </div>`;
+}
+
+function topbarTitle(){
+  if(currentRoute === 'dashboard') return 'الرئيسية';
+  if(currentRoute === 'admin') return 'المستخدمون والصلاحيات';
+  const nav = NAV.find(n=>n.key===currentRoute);
+  return nav ? MODULES[nav.module].title : '';
+}
+
+function mainLayout(){
+  return `
+  <div class="layout">
+    ${sidebarHTML()}
+    <div class="main">
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+          <h2>${topbarTitle()}</h2>
+        </div>
+        <div class="user-chip">
+          <div class="who"><b>${currentUser.name}</b>${currentUser.username}</div>
+          <button class="btn btn-ghost btn-sm" onclick="logout()">خروج</button>
+        </div>
+      </div>
+      <div class="content" id="content">${routeContent()}</div>
+    </div>
+  </div>
+  ${modalState && !modalState.isUserModal ? modalHTML() : ''}
+  `;
+}
+
+function toggleSidebar(){ sidebarOpen = !sidebarOpen; render(); }
+function logout(){ currentUser = null; render(); }
+
+function goRoute(key){
+  currentRoute = key; sidebarOpen = false; render();
+}
+
+/* ===================== Route content ===================== */
+function routeContent(){
+  if(currentRoute === 'dashboard') return dashboardHTML();
+  if(currentRoute === 'admin') return currentUser.isAdmin ? adminHTML() : noAccessHTML();
+  const nav = NAV.find(n=>n.key===currentRoute);
+  if(!nav) return dashboardHTML();
+  const mod = MODULES[nav.module];
+  if(!canView(mod.permKey)) return noAccessHTML();
+  return moduleHTML(nav.module, mod);
+}
+
+function noAccessHTML(){
+  return `<div class="no-access">لا تملك صلاحية الوصول إلى هذا القسم. تواصل مع مدير النظام لمنحك صلاحية المشاهدة أو التعديل.</div>`;
+}
+
+/* ---------- Dashboard ---------- */
+function dashboardHTML(){
+  const activeProjects = STATE.projects.filter(p=>p.status==='قيد التنفيذ').length;
+  const pendingExtracts = STATE.extracts.filter(e=>e.status!=='مصروف').length;
+  const lowStock = STATE.warehouseItems.filter(i=> Number(i.qty||0) <= Number(i.minQty||0)).length;
+  const income = STATE.finance.filter(f=>f.type==='إيراد').reduce((s,f)=>s+Number(f.amount||0),0);
+  const expense = STATE.finance.filter(f=>f.type==='مصروف').reduce((s,f)=>s+Number(f.amount||0),0);
+
+  return `
+  <div class="cards-row">
+    <div class="stat-card"><div class="n">${STATE.projects.length}</div><div class="l">إجمالي المشاريع</div></div>
+    <div class="stat-card amber"><div class="n">${activeProjects}</div><div class="l">مشاريع قيد التنفيذ</div></div>
+    <div class="stat-card ${pendingExtracts>0?'amber':''}"><div class="n">${pendingExtracts}</div><div class="l">مستخلصات لم تُصرف بعد</div></div>
+    <div class="stat-card ${lowStock>0?'danger':'success'}"><div class="n">${lowStock}</div><div class="l">أصناف عند حد الطلب</div></div>
+  </div>
+  <div class="cards-row" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));">
+    <div class="stat-card success"><div class="n">${income.toLocaleString('ar-EG')}</div><div class="l">إجمالي الإيرادات</div></div>
+    <div class="stat-card danger"><div class="n">${expense.toLocaleString('ar-EG')}</div><div class="l">إجمالي المصروفات</div></div>
+    <div class="stat-card"><div class="n">${(income-expense).toLocaleString('ar-EG')}</div><div class="l">صافي الرصيد</div></div>
+  </div>
+  <div class="section-note">هذه البيانات مشتركة بين جميع من يدخل هذا النظام عبر نفس الرابط، ويظهر لكل مستخدم فقط الأقسام المسموح له بها.</div>
+  `;
+}
+
+/* ---------- Generic module list ---------- */
+function moduleHTML(key, mod){
+  const list = STATE[key] || [];
+  const editable = canEdit(mod.permKey);
+
+  let filterBar = '';
+  let filtered = list;
+  if(mod.hasProject){
+    const pid = projectFilter[key] || '';
+    filterBar = `
+      <select onchange="setProjectFilter('${key}', this.value)">
+        <option value="">كل المشاريع</option>
+        ${STATE.projects.map(p=>`<option value="${p.id}" ${pid===p.id?'selected':''}>${escapeHtml(p.name)}</option>`).join('')}
+      </select>`;
+    if(pid) filtered = list.filter(r=>r.projectId===pid);
+  }
+
+  const rows = filtered.map(r=>{
+    const cells = mod.columns.map(([f,_])=>`<td>${formatCell(mod,f,r[f])}</td>`).join('');
+    const projCell = mod.hasProject ? `<td>${escapeHtml(projectName(r.projectId))}</td>` : '';
+    const creator = r.createdByName || r.createdBy || '—';
+    const creatorCell = `<td><span class="badge">${escapeHtml(creator)}</span></td>`;
+    return `<tr>
+      ${projCell}
+      ${cells}
+      ${creatorCell}
+      <td><div class="row-actions">
+        <button class="link-btn" onclick="openEdit('${key}','${r.id}')">${editable?'تعديل':'عرض'}</button>
+        ${editable?`<button class="link-btn danger" onclick="deleteRecord('${key}','${r.id}')">حذف</button>`:''}
+      </div></td>
+    </tr>`;
+  }).join('');
+
+  const headCols = mod.columns.map(([_,l])=>`<th>${l}</th>`).join('');
+  const projHead = mod.hasProject ? `<th>المشروع</th>` : '';
+
+  return `
+    <div class="toolbar">
+      <div class="filters">${filterBar}</div>
+      ${editable ? `<button class="btn btn-amber" onclick="openNew('${key}')">+ إضافة</button>` : ''}
+    </div>
+    <table>
+      <thead><tr>${projHead}${headCols}<th>أُضيف بواسطة</th><th></th></tr></thead>
+      <tbody>
+        ${rows || `<tr class="empty-row"><td colspan="10">لا توجد بيانات بعد${editable?' — اضغط «إضافة» لبدء الإدخال':''}</td></tr>`}
+      </tbody>
+    </table>
+  `;
+}
+
+function setProjectFilter(key, val){ projectFilter[key] = val; render(); }
+function projectName(id){ const p = STATE.projects.find(x=>x.id===id); return p ? p.name : '—'; }
+function formatCell(mod, field, val){
+  if(val === undefined || val === null || val === '') return '<span style="color:#B7B0A0">—</span>';
+  const fdef = mod.fields.find(f=>f.name===field);
+  if(fdef && fdef.type==='number') return Number(val).toLocaleString('ar-EG');
+  if(fdef && fdef.name==='status'){
+    const cls = /معتمد|منتهي$|ساري|مصروف/.test(val) ? (val==='مرفوض'||val==='ملغي'?'bad':'ok') : (val==='مرفوض'?'bad':'warn');
+    return `<span class="badge ${cls}">${escapeHtml(val)}</span>`;
+  }
+  return escapeHtml(String(val));
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ---------- Modal (create/edit record) ---------- */
+function openNew(key){ modalState = {moduleKey:key, record:{}, isNew:true}; render(); }
+function openEdit(key, id){
+  const rec = STATE[key].find(r=>r.id===id);
+  modalState = {moduleKey:key, record:{...rec}, isNew:false};
+  render();
+}
+function closeModal(){ modalState = null; render(); }
+
+function modalHTML(){
+  const {moduleKey, record, isNew} = modalState;
+  const mod = MODULES[moduleKey];
+  const editable = canEdit(mod.permKey);
+
+  let projField = '';
+  if(mod.hasProject){
+    projField = `<div class="field full">
+      <label>المشروع *</label>
+      <select id="f_projectId" ${!editable?'disabled':''}>
+        <option value="">— اختر مشروع —</option>
+        ${STATE.projects.map(p=>`<option value="${p.id}" ${record.projectId===p.id?'selected':''}>${escapeHtml(p.name)}</option>`).join('')}
+      </select>
+    </div>`;
+  }
+
+  const fieldsHTML = mod.fields.map(f=>{
+    const isFull = f.type==='textarea';
+    const val = record[f.name] !== undefined ? record[f.name] : '';
+    let input = '';
+    if(f.type==='select'){
+      input = `<select id="f_${f.name}" ${!editable?'disabled':''}>
+        <option value="">—</option>
+        ${f.options.map(o=>`<option value="${o}" ${val===o?'selected':''}>${o}</option>`).join('')}
+      </select>`;
+    } else if(f.type==='textarea'){
+      input = `<textarea id="f_${f.name}" rows="3" ${!editable?'disabled':''}>${escapeHtml(val)}</textarea>`;
+    } else {
+      input = `<input type="${f.type}" id="f_${f.name}" value="${escapeHtml(val)}" ${!editable?'disabled':''}>`;
+    }
+    return `<div class="field ${isFull?'full':''}"><label>${f.label}${f.required?' *':''}</label>${input}</div>`;
+  }).join('');
+
+  return `
+  <div class="overlay" onclick="if(event.target===this) closeModal()">
+    <div class="modal">
+      <h3>${isNew ? 'إضافة سجل — ' : (editable?'تعديل سجل — ':'عرض سجل — ')}${mod.title}</h3>
+      ${!isNew && (record.createdByName||record.createdBy) ? `<div class="section-note">تمت الإضافة بواسطة: <b>${escapeHtml(record.createdByName||record.createdBy)}</b>${record.updatedByName?` — آخر تعديل بواسطة: <b>${escapeHtml(record.updatedByName)}</b>`:''}</div>` : ''}
+      <div class="form-grid">
+        ${projField}
+        ${fieldsHTML}
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal()">إغلاق</button>
+        ${editable ? `<button class="btn btn-primary" onclick="saveRecord()">حفظ</button>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+async function saveRecord(){
+  const {moduleKey, record, isNew} = modalState;
+  const mod = MODULES[moduleKey];
+
+  if(mod.hasProject){
+    const pid = document.getElementById('f_projectId').value;
+    if(!pid){ alert('من فضلك اختر المشروع'); return; }
+    record.projectId = pid;
+  }
+  for(const f of mod.fields){
+    const el = document.getElementById('f_'+f.name);
+    const v = el.value;
+    if(f.required && !v){ alert('من فضلك أدخل: '+f.label); return; }
+    record[f.name] = v;
+  }
+  if(isNew){
+    record.id = genId();
+    record.createdBy = currentUser.username;
+    record.createdByName = currentUser.name;
+    STATE[moduleKey].push(record);
+  } else {
+    record.updatedBy = currentUser.username;
+    record.updatedByName = currentUser.name;
+    const idx = STATE[moduleKey].findIndex(r=>r.id===record.id);
+    STATE[moduleKey][idx] = record;
+  }
+  await dbSet(moduleKey, STATE[moduleKey]);
+  modalState = null;
+  render();
+}
+
+async function deleteRecord(moduleKey, id){
+  if(!confirm('هل تريد حذف هذا السجل؟')) return;
+  STATE[moduleKey] = STATE[moduleKey].filter(r=>r.id!==id);
+  await dbSet(moduleKey, STATE[moduleKey]);
+  render();
+}
+
+/* ===================== Admin: users & permissions ===================== */
+function adminHTML(){
+  const rows = STATE.users.map(u=>`
+    <tr>
+      <td>${escapeHtml(u.name)}</td>
+      <td>${escapeHtml(u.username)}</td>
+      <td>${u.isAdmin ? '<span class="badge ok">مدير كامل الصلاحيات</span>' : '<span class="badge">مستخدم</span>'}</td>
+      <td><div class="row-actions">
+        <button class="link-btn" onclick="openUserEdit('${u.id}')">تعديل</button>
+        ${u.username!=='admin' ? `<button class="link-btn danger" onclick="deleteUser('${u.id}')">حذف</button>` : ''}
+      </div></td>
+    </tr>`).join('');
+
+  return `
+    <div class="section-note">من هنا تنشئ حسابات للمهندسين والموظفين، وتحدد لكل واحد صلاحية «مشاهدة فقط» أو «تعديل» في كل قسم على حدة، أو تجعله مديراً بكامل الصلاحيات.</div>
+    <div class="toolbar">
+      <div></div>
+      <button class="btn btn-amber" onclick="openUserNew()">+ إضافة مستخدم</button>
+    </div>
+    <table>
+      <thead><tr><th>الاسم</th><th>اسم المستخدم</th><th>الدور</th><th></th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    ${modalState && modalState.isUserModal ? userModalHTML() : ''}
+  `;
+}
+
+function openUserNew(){
+  modalState = {isUserModal:true, isNew:true, record:{isAdmin:false, permissions:{}}};
+  render();
+}
+function openUserEdit(id){
+  const u = STATE.users.find(x=>x.id===id);
+  modalState = {isUserModal:true, isNew:false, record:JSON.parse(JSON.stringify(u))};
+  render();
+}
+async function deleteUser(id){
+  if(!confirm('هل تريد حذف هذا المستخدم؟')) return;
+  STATE.users = STATE.users.filter(u=>u.id!==id);
+  await dbSet('users', STATE.users);
+  render();
+}
+
+function userModalHTML(){
+  const {record, isNew} = modalState;
+  const permRows = PERM_KEYS.map(pk=>{
+    const level = (record.permissions && record.permissions[pk]) || 'none';
+    return `<tr>
+      <td>${PERM_LABELS[pk]}</td>
+      <td><select id="perm_${pk}" ${record.isAdmin?'disabled':''}>
+        <option value="none" ${level==='none'?'selected':''}>لا يوجد</option>
+        <option value="view" ${level==='view'?'selected':''}>مشاهدة</option>
+        <option value="edit" ${level==='edit'?'selected':''}>تعديل</option>
+      </select></td>
+    </tr>`;
+  }).join('');
+
+  return `
+  <div class="overlay" onclick="if(event.target===this) closeModal()">
+    <div class="modal" style="max-width:640px;">
+      <h3>${isNew?'إضافة مستخدم جديد':'تعديل بيانات المستخدم'}</h3>
+      <div class="form-grid">
+        <div class="field"><label>الاسم الكامل *</label><input id="u_name" value="${escapeHtml(record.name||'')}"></div>
+        <div class="field"><label>اسم المستخدم *</label><input id="u_username" value="${escapeHtml(record.username||'')}" ${record.username==='admin'?'disabled':''}></div>
+        <div class="field"><label>كلمة المرور ${isNew?'*':'(اتركها فارغة لعدم التغيير)'}</label><input id="u_password" type="text" value=""></div>
+        <div class="field">
+          <label>الدور</label>
+          <select id="u_isAdmin" onchange="toggleAdminPreview(this.value)">
+            <option value="0" ${!record.isAdmin?'selected':''}>مستخدم بصلاحيات محددة</option>
+            <option value="1" ${record.isAdmin?'selected':''}>مدير كامل الصلاحيات</option>
+          </select>
+        </div>
+      </div>
+      <div class="field full" style="margin-top:14px;">
+        <label>صلاحيات الأقسام</label>
+        <table class="perm-table">
+          <thead><tr><th style="text-align:right;">القسم</th><th>المستوى</th></tr></thead>
+          <tbody id="permBody">${permRows}</tbody>
+        </table>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal()">إلغاء</button>
+        <button class="btn btn-primary" onclick="saveUser()">حفظ</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleAdminPreview(val){
+  const disabled = val==='1';
+  PERM_KEYS.forEach(pk=>{
+    const el = document.getElementById('perm_'+pk);
+    if(el) el.disabled = disabled;
+  });
+}
+
+async function saveUser(){
+  const {record, isNew} = modalState;
+  const name = document.getElementById('u_name').value.trim();
+  const username = document.getElementById('u_username').value.trim();
+  const password = document.getElementById('u_password').value;
+  const isAdmin = document.getElementById('u_isAdmin').value === '1';
+
+  if(!name || !username){ alert('من فضلك أدخل الاسم واسم المستخدم'); return; }
+  if(isNew && !password){ alert('من فضلك أدخل كلمة مرور'); return; }
+  const dup = STATE.users.find(u=>u.username===username && u.id!==record.id);
+  if(dup){ alert('اسم المستخدم مستخدم بالفعل'); return; }
+
+  const permissions = {};
+  PERM_KEYS.forEach(pk=>{
+    const el = document.getElementById('perm_'+pk);
+    permissions[pk] = el ? el.value : 'none';
+  });
+
+  if(isNew){
+    STATE.users.push({
+      id:genId(), name, username, password, isAdmin, permissions
+    });
+  } else {
+    const idx = STATE.users.findIndex(u=>u.id===record.id);
+    STATE.users[idx].name = name;
+    STATE.users[idx].username = username;
+    if(password) STATE.users[idx].password = password;
+    STATE.users[idx].isAdmin = isAdmin;
+    STATE.users[idx].permissions = permissions;
+    if(currentUser.id === record.id) currentUser = STATE.users[idx];
+  }
+  await dbSet('users', STATE.users);
+  modalState = null;
+  render();
+}
+
+/* ===================== Render root ===================== */
+function render(){
+  const app = document.getElementById('app');
+  if(!currentUser){
+    app.innerHTML = loginScreen();
+    attachLoginHandlers();
+    return;
+  }
+  app.innerHTML = mainLayout();
+}
+
+boot();
+</script>
+</body>
+</html>
