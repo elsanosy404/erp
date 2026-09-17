@@ -174,6 +174,16 @@
     .menu-btn{display:inline-flex !important;}
   }
   .menu-btn{display:none;background:none;border:1.5px solid var(--line);border-radius:3px;padding:7px 10px;cursor:pointer;font-size:16px;}
+
+  .print-only{display:none;}
+  @media print{
+    .sidebar, .topbar, .no-print, .overlay { display:none !important; }
+    body{background:#fff;}
+    .content{padding:0;}
+    .print-only{display:block;}
+    table{border:1px solid #000;}
+    thead th, tbody td{border-color:#999;}
+  }
 </style>
 </head>
 <body>
@@ -218,15 +228,27 @@ function genId(){ return Date.now().toString(36)+Math.random().toString(36).slic
 function todayISO(){ return new Date().toISOString().slice(0,10); }
 
 /* ===================== State ===================== */
-const PERM_KEYS = ['projects','details','engineer','techoffice','warehouse','finance','extracts','contracts'];
+const PERM_KEYS = ['company','projects','details','planning','siteExecution','engineer','engineersList','labor','equipment',
+  'techoffice','boq','purchases','suppliers','deliveries','warehouse','warehousesLoc','contracts','extracts',
+  'invoices','finance','accounting','qaqc','hse','documents','correspondence','changeOrders','claims','risks','handover','reports'];
 const PERM_LABELS = {
-  projects:'المشاريع', details:'تفاصيل المشروع', engineer:'المهندس المدني', techoffice:'المكتب الفني',
-  warehouse:'المخزن', finance:'الماليات', extracts:'المستخلصات', contracts:'العقود'
+  company:'الشركة والفروع', projects:'المشاريع', details:'تفاصيل المشروع', planning:'التخطيط والبرنامج الزمني',
+  siteExecution:'التنفيذ ومتابعة الموقع', engineer:'المهندس المدني (تقارير الموقع)', engineersList:'المهندسون (سجل)', labor:'العمالة', equipment:'المعدات',
+  techoffice:'المكتب الفني', boq:'الكميات / BOQ', purchases:'المشتريات', suppliers:'الموردون والمقاولون',
+  deliveries:'التوريدات والاستلام', warehouse:'المخزن (الأصناف والحركة)', warehousesLoc:'المخازن',
+  contracts:'العقود', extracts:'المستخلصات', invoices:'الفواتير', finance:'الماليات', accounting:'المحاسبة',
+  qaqc:'QA/QC والجودة', hse:'HSE والسلامة', documents:'إدارة المستندات والرسومات',
+  correspondence:'المراسلات والخطابات', changeOrders:'الأوامر التغييرية', claims:'Claims المطالبات',
+  risks:'المخاطر', handover:'التسليم والصيانة بعد التسليم', reports:'التقارير التنفيذية'
 };
 
 let STATE = {
   users:[], projects:[], phases:[], siteReports:[], techOffice:[],
-  warehouseItems:[], warehouseTx:[], finance:[], extracts:[], contracts:[]
+  warehouseItems:[], warehouseTx:[], finance:[], extracts:[], contracts:[],
+  company:[], planning:[], siteExecution:[], engineersList:[], labor:[], equipment:[],
+  boq:[], purchases:[], suppliers:[], deliveries:[], warehousesLoc:[], invoices:[],
+  accounting:[], qaqc:[], hse:[], documents:[], correspondence:[], changeOrders:[],
+  claims:[], risks:[], finalHandover:[], postHandoverMaint:[], execReports:[]
 };
 let currentUser = null;
 let currentRoute = 'dashboard';
@@ -339,26 +361,318 @@ const MODULES = {
       {name:'notes',label:'بنود وملاحظات',type:'textarea'}
     ],
     columns:[['contractNumber','رقم العقد'],['party','الطرف الثاني'],['value','القيمة'],['status','الحالة']]
+  },
+  company:{
+    title:'الشركة والفروع', permKey:'company',
+    fields:[
+      {name:'name',label:'اسم الفرع / الشركة',type:'text',required:true},
+      {name:'location',label:'الموقع',type:'text'},
+      {name:'manager',label:'المسؤول',type:'text'},
+      {name:'phone',label:'تليفون',type:'text'},
+      {name:'notes',label:'ملاحظات',type:'textarea'}
+    ],
+    columns:[['name','الاسم'],['location','الموقع'],['manager','المسؤول'],['phone','تليفون']]
+  },
+  planning:{
+    title:'التخطيط والبرنامج الزمني', permKey:'planning', hasProject:true,
+    fields:[
+      {name:'activity',label:'النشاط',type:'text',required:true},
+      {name:'plannedStart',label:'البدء المخطط',type:'date'},
+      {name:'plannedEnd',label:'الانتهاء المخطط',type:'date'},
+      {name:'actualStart',label:'البدء الفعلي',type:'date'},
+      {name:'actualEnd',label:'الانتهاء الفعلي',type:'date'},
+      {name:'status',label:'الحالة',type:'select',options:['لم يبدأ','جاري','منتهي','متأخر']},
+      {name:'notes',label:'ملاحظات',type:'textarea'}
+    ],
+    columns:[['activity','النشاط'],['plannedStart','البدء المخطط'],['plannedEnd','الانتهاء المخطط'],['status','الحالة']]
+  },
+  siteExecution:{
+    title:'التنفيذ ومتابعة الموقع', permKey:'siteExecution', hasProject:true,
+    fields:[
+      {name:'date',label:'التاريخ',type:'date',required:true},
+      {name:'activity',label:'النشاط المنفذ',type:'text'},
+      {name:'percentComplete',label:'نسبة الإنجاز %',type:'number'},
+      {name:'issues',label:'معوقات / ملاحظات',type:'textarea'}
+    ],
+    columns:[['date','التاريخ'],['activity','النشاط'],['percentComplete','% الإنجاز']]
+  },
+  engineersList:{
+    title:'المهندسون', permKey:'engineersList',
+    fields:[
+      {name:'name',label:'الاسم',type:'text',required:true},
+      {name:'specialty',label:'التخصص',type:'select',options:['مدني','معماري','كهرباء','ميكانيكا','مساحة']},
+      {name:'phone',label:'تليفون',type:'text'},
+      {name:'status',label:'الحالة',type:'select',options:['نشط','إجازة','منتهي عقده']},
+      {name:'notes',label:'ملاحظات',type:'textarea'}
+    ],
+    columns:[['name','الاسم'],['specialty','التخصص'],['phone','تليفون'],['status','الحالة']]
+  },
+  labor:{
+    title:'العمالة', permKey:'labor', hasProject:true,
+    fields:[
+      {name:'groupName',label:'اسم المجموعة / العامل',type:'text',required:true},
+      {name:'craft',label:'المهنة',type:'text'},
+      {name:'count',label:'عدد الأفراد',type:'number'},
+      {name:'dailyRate',label:'الأجر اليومي',type:'number'},
+      {name:'notes',label:'ملاحظات',type:'textarea'}
+    ],
+    columns:[['groupName','المجموعة'],['craft','المهنة'],['count','العدد'],['dailyRate','الأجر اليومي']]
+  },
+  equipment:{
+    title:'المعدات', permKey:'equipment', hasProject:true,
+    fields:[
+      {name:'name',label:'اسم المعدة',type:'text',required:true},
+      {name:'type',label:'النوع',type:'text'},
+      {name:'status',label:'الحالة',type:'select',options:['تعمل','صيانة','متوقفة']},
+      {name:'notes',label:'ملاحظات',type:'textarea'}
+    ],
+    columns:[['name','المعدة'],['type','النوع'],['status','الحالة']]
+  },
+  boq:{
+    title:'الكميات / BOQ', permKey:'boq', hasProject:true,
+    fields:[
+      {name:'itemName',label:'البند',type:'text',required:true},
+      {name:'unit',label:'الوحدة',type:'text'},
+      {name:'quantity',label:'الكمية',type:'number'},
+      {name:'unitPrice',label:'سعر الوحدة',type:'number'},
+      {name:'notes',label:'ملاحظات',type:'textarea'}
+    ],
+    columns:[['itemName','البند'],['unit','الوحدة'],['quantity','الكمية'],['unitPrice','سعر الوحدة']]
+  },
+  purchases:{
+    title:'المشتريات', permKey:'purchases', hasProject:true,
+    fields:[
+      {name:'itemName',label:'الصنف',type:'text',required:true},
+      {name:'quantity',label:'الكمية',type:'number'},
+      {name:'supplier',label:'المورد',type:'text'},
+      {name:'orderDate',label:'تاريخ الطلب',type:'date'},
+      {name:'status',label:'الحالة',type:'select',options:['طلب جديد','تم الطلب','تم الاستلام']},
+      {name:'notes',label:'ملاحظات',type:'textarea'}
+    ],
+    columns:[['itemName','الصنف'],['quantity','الكمية'],['supplier','المورد'],['status','الحالة']]
+  },
+  suppliers:{
+    title:'الموردون والمقاولون', permKey:'suppliers',
+    fields:[
+      {name:'name',label:'الاسم',type:'text',required:true},
+      {name:'type',label:'النوع',type:'select',options:['مورد مواد','مقاول باطن','مقاول متخصص']},
+      {name:'phone',label:'تليفون',type:'text'},
+      {name:'notes',label:'ملاحظات',type:'textarea'}
+    ],
+    columns:[['name','الاسم'],['type','النوع'],['phone','تليفون']]
+  },
+  deliveries:{
+    title:'التوريدات والاستلام', permKey:'deliveries', hasProject:true,
+    fields:[
+      {name:'itemName',label:'الصنف',type:'text',required:true},
+      {name:'quantity',label:'الكمية',type:'number'},
+      {name:'supplier',label:'المورد',type:'text'},
+      {name:'date',label:'التاريخ',type:'date'},
+      {name:'receivedBy',label:'استلمها',type:'text'},
+      {name:'notes',label:'ملاحظات',type:'textarea'}
+    ],
+    columns:[['date','التاريخ'],['itemName','الصنف'],['quantity','الكمية'],['supplier','المورد']]
+  },
+  warehousesLoc:{
+    title:'المخازن', permKey:'warehousesLoc',
+    fields:[
+      {name:'name',label:'اسم المخزن',type:'text',required:true},
+      {name:'location',label:'الموقع',type:'text'},
+      {name:'manager',label:'أمين المخزن',type:'text'},
+      {name:'notes',label:'ملاحظات',type:'textarea'}
+    ],
+    columns:[['name','المخزن'],['location','الموقع'],['manager','أمين المخزن']]
+  },
+  invoices:{
+    title:'الفواتير', permKey:'invoices', hasProject:true,
+    fields:[
+      {name:'number',label:'رقم الفاتورة',type:'text',required:true},
+      {name:'party',label:'الجهة',type:'text'},
+      {name:'amount',label:'المبلغ',type:'number'},
+      {name:'date',label:'التاريخ',type:'date'},
+      {name:'status',label:'الحالة',type:'select',options:['غير مدفوعة','مدفوعة جزئياً','مدفوعة']},
+      {name:'notes',label:'ملاحظات',type:'textarea'}
+    ],
+    columns:[['number','رقم الفاتورة'],['party','الجهة'],['amount','المبلغ'],['status','الحالة']]
+  },
+  accounting:{
+    title:'المحاسبة', permKey:'accounting', hasProject:true,
+    fields:[
+      {name:'entryType',label:'نوع القيد',type:'select',options:['قيد يومية','سند قبض','سند صرف']},
+      {name:'account',label:'الحساب',type:'text'},
+      {name:'amount',label:'المبلغ',type:'number',required:true},
+      {name:'date',label:'التاريخ',type:'date'},
+      {name:'notes',label:'ملاحظات',type:'textarea'}
+    ],
+    columns:[['date','التاريخ'],['entryType','النوع'],['account','الحساب'],['amount','المبلغ']]
+  },
+  qaqc:{
+    title:'QA/QC والجودة', permKey:'qaqc', hasProject:true,
+    fields:[
+      {name:'item',label:'البند',type:'text',required:true},
+      {name:'inspectionDate',label:'تاريخ الفحص',type:'date'},
+      {name:'result',label:'النتيجة',type:'select',options:['مطابق','غير مطابق','معلق']},
+      {name:'inspector',label:'الفاحص',type:'text'},
+      {name:'notes',label:'ملاحظات',type:'textarea'}
+    ],
+    columns:[['item','البند'],['inspectionDate','تاريخ الفحص'],['result','النتيجة']]
+  },
+  hse:{
+    title:'HSE والسلامة', permKey:'hse', hasProject:true,
+    fields:[
+      {name:'date',label:'التاريخ',type:'date',required:true},
+      {name:'incidentType',label:'النوع',type:'select',options:['ملاحظة','حادثة','شبه حادثة']},
+      {name:'description',label:'الوصف',type:'textarea'},
+      {name:'severity',label:'الخطورة',type:'select',options:['منخفض','متوسط','عالي']},
+      {name:'correctiveAction',label:'الإجراء التصحيحي',type:'textarea'}
+    ],
+    columns:[['date','التاريخ'],['incidentType','النوع'],['severity','الخطورة']]
+  },
+  documents:{
+    title:'إدارة المستندات والرسومات', permKey:'documents', hasProject:true,
+    fields:[
+      {name:'title',label:'العنوان',type:'text',required:true},
+      {name:'category',label:'التصنيف',type:'select',options:['رسم','مستند','تصريح']},
+      {name:'version',label:'رقم الإصدار',type:'text'},
+      {name:'date',label:'التاريخ',type:'date'},
+      {name:'notes',label:'ملاحظات',type:'textarea'}
+    ],
+    columns:[['title','العنوان'],['category','التصنيف'],['version','الإصدار'],['date','التاريخ']]
+  },
+  correspondence:{
+    title:'المراسلات والخطابات', permKey:'correspondence', hasProject:true,
+    fields:[
+      {name:'number',label:'رقم الخطاب',type:'text'},
+      {name:'direction',label:'الاتجاه',type:'select',options:['صادر','وارد']},
+      {name:'subject',label:'الموضوع',type:'text',required:true},
+      {name:'party',label:'الجهة',type:'text'},
+      {name:'date',label:'التاريخ',type:'date'},
+      {name:'notes',label:'ملاحظات',type:'textarea'}
+    ],
+    columns:[['date','التاريخ'],['direction','الاتجاه'],['subject','الموضوع'],['party','الجهة']]
+  },
+  changeOrders:{
+    title:'الأوامر التغييرية', permKey:'changeOrders', hasProject:true,
+    fields:[
+      {name:'number',label:'رقم الأمر',type:'text',required:true},
+      {name:'description',label:'الوصف',type:'textarea'},
+      {name:'costImpact',label:'الأثر المالي',type:'number'},
+      {name:'timeImpact',label:'الأثر الزمني (أيام)',type:'text'},
+      {name:'status',label:'الحالة',type:'select',options:['مقترح','معتمد','مرفوض']},
+      {name:'date',label:'التاريخ',type:'date'}
+    ],
+    columns:[['number','رقم الأمر'],['costImpact','الأثر المالي'],['status','الحالة'],['date','التاريخ']]
+  },
+  claims:{
+    title:'Claims المطالبات', permKey:'claims', hasProject:true,
+    fields:[
+      {name:'number',label:'رقم المطالبة',type:'text',required:true},
+      {name:'subject',label:'الموضوع',type:'text'},
+      {name:'amount',label:'القيمة',type:'number'},
+      {name:'status',label:'الحالة',type:'select',options:['قيد الإعداد','مقدمة','تحت التفاوض','محسومة']},
+      {name:'date',label:'التاريخ',type:'date'},
+      {name:'notes',label:'ملاحظات',type:'textarea'}
+    ],
+    columns:[['number','رقم المطالبة'],['subject','الموضوع'],['amount','القيمة'],['status','الحالة']]
+  },
+  risks:{
+    title:'المخاطر', permKey:'risks', hasProject:true,
+    fields:[
+      {name:'title',label:'المخاطرة',type:'text',required:true},
+      {name:'category',label:'التصنيف',type:'select',options:['فني','مالي','زمني','أمان']},
+      {name:'probability',label:'الاحتمالية',type:'select',options:['منخفض','متوسط','عالي']},
+      {name:'impact',label:'التأثير',type:'select',options:['منخفض','متوسط','عالي']},
+      {name:'mitigation',label:'إجراءات التخفيف',type:'textarea'},
+      {name:'status',label:'الحالة',type:'select',options:['مفتوح','تحت المعالجة','مغلق']}
+    ],
+    columns:[['title','المخاطرة'],['category','التصنيف'],['probability','الاحتمالية'],['status','الحالة']]
+  },
+  finalHandover:{
+    title:'التسليم النهائي', permKey:'handover', hasProject:true,
+    fields:[
+      {name:'date',label:'التاريخ',type:'date',required:true},
+      {name:'description',label:'الوصف',type:'textarea'},
+      {name:'status',label:'الحالة',type:'select',options:['قيد الإعداد','تم التسليم']},
+      {name:'notes',label:'ملاحظات',type:'textarea'}
+    ],
+    columns:[['date','التاريخ'],['status','الحالة']]
+  },
+  postHandoverMaint:{
+    title:'الصيانة بعد التسليم', permKey:'handover', hasProject:true,
+    fields:[
+      {name:'date',label:'التاريخ',type:'date',required:true},
+      {name:'issue',label:'العطل / الطلب',type:'textarea'},
+      {name:'status',label:'الحالة',type:'select',options:['مفتوح','تم الحل']},
+      {name:'technician',label:'الفني المسؤول',type:'text'},
+      {name:'notes',label:'ملاحظات',type:'textarea'}
+    ],
+    columns:[['date','التاريخ'],['issue','العطل'],['status','الحالة']]
+  },
+  execReports:{
+    title:'التقارير التنفيذية', permKey:'reports', hasProject:true,
+    fields:[
+      {name:'title',label:'عنوان التقرير',type:'text',required:true},
+      {name:'period',label:'الفترة',type:'text'},
+      {name:'summary',label:'ملخص',type:'textarea'},
+      {name:'date',label:'التاريخ',type:'date'}
+    ],
+    columns:[['title','العنوان'],['period','الفترة'],['date','التاريخ']]
   }
 };
 
 const NAV = [
   {key:'dashboard', label:'الرئيسية', special:true},
-  {group:'المشاريع'},
+  {group:'الإدارة العليا'},
+  {key:'company', label:'الشركة والفروع', module:'company'},
+  {group:'إدارة المشاريع'},
   {key:'projects', label:'المشاريع', module:'projects'},
   {key:'phases', label:'تفاصيل المشروع', module:'phases'},
+  {key:'planning', label:'التخطيط والبرنامج الزمني', module:'planning'},
+  {key:'siteExecution', label:'التنفيذ ومتابعة الموقع', module:'siteExecution'},
+  {group:'الموارد'},
+  {key:'engineersList', label:'المهندسون', module:'engineersList'},
+  {key:'labor', label:'العمالة', module:'labor'},
+  {key:'equipment', label:'المعدات', module:'equipment'},
   {group:'الفني'},
   {key:'siteReports', label:'المهندس المدني', module:'siteReports'},
   {key:'techOffice', label:'المكتب الفني', module:'techOffice'},
-  {group:'الموارد'},
+  {group:'التكلفة والكميات'},
+  {key:'boq', label:'الكميات / BOQ', module:'boq'},
+  {group:'المشتريات والتوريدات'},
+  {key:'purchases', label:'المشتريات', module:'purchases'},
+  {key:'suppliers', label:'الموردون والمقاولون', module:'suppliers'},
+  {key:'deliveries', label:'التوريدات والاستلام', module:'deliveries'},
+  {group:'المخازن'},
+  {key:'warehousesLoc', label:'المخازن', module:'warehousesLoc'},
   {key:'warehouseItems', label:'المخزن - الأصناف', module:'warehouseItems'},
   {key:'warehouseTx', label:'المخزن - الحركة', module:'warehouseTx'},
-  {group:'المالية والعقود'},
-  {key:'finance', label:'الماليات', module:'finance'},
-  {key:'extracts', label:'المستخلصات', module:'extracts'},
+  {group:'العقود والمالية'},
   {key:'contracts', label:'العقود', module:'contracts'},
+  {key:'extracts', label:'المستخلصات', module:'extracts'},
+  {key:'invoices', label:'الفواتير', module:'invoices'},
+  {group:'الماليات والمحاسبة'},
+  {key:'finance', label:'الماليات', module:'finance'},
+  {key:'accounting', label:'المحاسبة', module:'accounting'},
+  {group:'الجودة والسلامة'},
+  {key:'qaqc', label:'QA/QC والجودة', module:'qaqc'},
+  {key:'hse', label:'HSE والسلامة', module:'hse'},
+  {group:'الوثائق'},
+  {key:'documents', label:'إدارة المستندات والرسومات', module:'documents'},
+  {key:'correspondence', label:'المراسلات والخطابات', module:'correspondence'},
+  {group:'العقود والمطالبات'},
+  {key:'changeOrders', label:'الأوامر التغييرية', module:'changeOrders'},
+  {key:'claims', label:'Claims المطالبات', module:'claims'},
+  {group:'إدارة المخاطر'},
+  {key:'risks', label:'المخاطر', module:'risks'},
+  {group:'التسليم والصيانة'},
+  {key:'finalHandover', label:'التسليم النهائي', module:'finalHandover'},
+  {key:'postHandoverMaint', label:'الصيانة بعد التسليم', module:'postHandoverMaint'},
   {group:'الإدارة'},
-  {key:'admin', label:'المستخدمون والصلاحيات', adminOnly:true}
+  {key:'admin', label:'المستخدمون والصلاحيات', adminOnly:true},
+  {group:'أدوات النظام'},
+  {key:'execReports', label:'التقارير التنفيذية', module:'execReports'},
+  {key:'activityLog', label:'سجل العمليات', adminOnly:true},
+  {key:'backup', label:'Backup / Restore', adminOnly:true}
 ];
 
 /* ===================== Permissions ===================== */
@@ -405,6 +719,29 @@ async function loadAllData(){
   STATE.finance = await dbGet('finance', []);
   STATE.extracts = await dbGet('extracts', []);
   STATE.contracts = await dbGet('contracts', []);
+  STATE.company = await dbGet('company', []);
+  STATE.planning = await dbGet('planning', []);
+  STATE.siteExecution = await dbGet('siteExecution', []);
+  STATE.engineersList = await dbGet('engineersList', []);
+  STATE.labor = await dbGet('labor', []);
+  STATE.equipment = await dbGet('equipment', []);
+  STATE.boq = await dbGet('boq', []);
+  STATE.purchases = await dbGet('purchases', []);
+  STATE.suppliers = await dbGet('suppliers', []);
+  STATE.deliveries = await dbGet('deliveries', []);
+  STATE.warehousesLoc = await dbGet('warehousesLoc', []);
+  STATE.invoices = await dbGet('invoices', []);
+  STATE.accounting = await dbGet('accounting', []);
+  STATE.qaqc = await dbGet('qaqc', []);
+  STATE.hse = await dbGet('hse', []);
+  STATE.documents = await dbGet('documents', []);
+  STATE.correspondence = await dbGet('correspondence', []);
+  STATE.changeOrders = await dbGet('changeOrders', []);
+  STATE.claims = await dbGet('claims', []);
+  STATE.risks = await dbGet('risks', []);
+  STATE.finalHandover = await dbGet('finalHandover', []);
+  STATE.postHandoverMaint = await dbGet('postHandoverMaint', []);
+  STATE.execReports = await dbGet('execReports', []);
 }
 
 /* ===================== Login ===================== */
@@ -480,6 +817,8 @@ function sidebarHTML(){
 function topbarTitle(){
   if(currentRoute === 'dashboard') return 'الرئيسية';
   if(currentRoute === 'admin') return 'المستخدمون والصلاحيات';
+  if(currentRoute === 'activityLog') return 'سجل العمليات';
+  if(currentRoute === 'backup') return 'Backup / Restore';
   const nav = NAV.find(n=>n.key===currentRoute);
   return nav ? MODULES[nav.module].title : '';
 }
@@ -517,6 +856,8 @@ function goRoute(key){
 function routeContent(){
   if(currentRoute === 'dashboard') return dashboardHTML();
   if(currentRoute === 'admin') return currentUser.isAdmin ? adminHTML() : noAccessHTML();
+  if(currentRoute === 'activityLog') return currentUser.isAdmin ? activityLogHTML() : noAccessHTML();
+  if(currentRoute === 'backup') return currentUser.isAdmin ? backupHTML() : noAccessHTML();
   const nav = NAV.find(n=>n.key===currentRoute);
   if(!nav) return dashboardHTML();
   const mod = MODULES[nav.module];
@@ -574,11 +915,13 @@ function moduleHTML(key, mod){
     const projCell = mod.hasProject ? `<td>${escapeHtml(projectName(r.projectId))}</td>` : '';
     const creator = r.createdByName || r.createdBy || '—';
     const creatorCell = `<td><span class="badge">${escapeHtml(creator)}</span></td>`;
+    const attachCell = `<td>${r.hasAttachment ? `<button class="link-btn" onclick="openAttachment('${key}','${r.id}')">📎 مرفقات</button>` : '<span style="color:#B7B0A0">—</span>'}</td>`;
     return `<tr>
       ${projCell}
       ${cells}
       ${creatorCell}
-      <td><div class="row-actions">
+      ${attachCell}
+      <td class="no-print"><div class="row-actions">
         <button class="link-btn" onclick="openEdit('${key}','${r.id}')">${editable?'تعديل':'عرض'}</button>
         ${editable?`<button class="link-btn danger" onclick="deleteRecord('${key}','${r.id}')">حذف</button>`:''}
       </div></td>
@@ -589,14 +932,18 @@ function moduleHTML(key, mod){
   const projHead = mod.hasProject ? `<th>المشروع</th>` : '';
 
   return `
-    <div class="toolbar">
+    <div class="toolbar no-print">
       <div class="filters">${filterBar}</div>
-      ${editable ? `<button class="btn btn-amber" onclick="openNew('${key}')">+ إضافة</button>` : ''}
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost" onclick="window.print()">🖨️ طباعة</button>
+        ${editable ? `<button class="btn btn-amber" onclick="openNew('${key}')">+ إضافة</button>` : ''}
+      </div>
     </div>
+    <h3 class="print-only" style="margin:0 0 12px;">${mod.title}</h3>
     <table>
-      <thead><tr>${projHead}${headCols}<th>أُضيف بواسطة</th><th></th></tr></thead>
+      <thead><tr>${projHead}${headCols}<th>أُضيف بواسطة</th><th>المرفقات</th><th class="no-print"></th></tr></thead>
       <tbody>
-        ${rows || `<tr class="empty-row"><td colspan="10">لا توجد بيانات بعد${editable?' — اضغط «إضافة» لبدء الإدخال':''}</td></tr>`}
+        ${rows || `<tr class="empty-row"><td colspan="12">لا توجد بيانات بعد${editable?' — اضغط «إضافة» لبدء الإدخال':''}</td></tr>`}
       </tbody>
     </table>
   `;
@@ -666,6 +1013,11 @@ function modalHTML(){
       <div class="form-grid">
         ${projField}
         ${fieldsHTML}
+        ${editable ? `<div class="field full">
+          <label>مرفق (صورة أو ملف)</label>
+          <input type="file" id="f_attachment">
+          ${record.hasAttachment ? `<div style="font-size:12.5px;color:var(--ink-soft);margin-top:6px;">📎 يوجد مرفق حالياً: ${escapeHtml(record.attachmentName||'')} — اختيار ملف جديد هيستبدله</div>` : ''}
+        </div>` : (record.hasAttachment ? `<div class="field full"><label>المرفق</label><button class="link-btn" onclick="openAttachment('${moduleKey}','${record.id}')">📎 ${escapeHtml(record.attachmentName||'فتح المرفق')}</button></div>` : '')}
       </div>
       <div class="modal-actions">
         <button class="btn btn-ghost" onclick="closeModal()">إغلاق</button>
@@ -701,9 +1053,42 @@ async function saveRecord(){
     const idx = STATE[moduleKey].findIndex(r=>r.id===record.id);
     STATE[moduleKey][idx] = record;
   }
+
+  const fileInput = document.getElementById('f_attachment');
+  const file = fileInput && fileInput.files && fileInput.files[0];
+  if(file){
+    if(file.size > 4 * 1024 * 1024){
+      alert('حجم المرفق كبير جداً (الحد الأقصى تقريباً 4 ميجا). لم يتم رفع المرفق، لكن باقي بيانات السجل اتحفظت.');
+    } else {
+      try{
+        const dataUrl = await new Promise((resolve, reject)=>{
+          const reader = new FileReader();
+          reader.onload = ()=>resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        await dbSet('attach_'+moduleKey+'_'+record.id, {name:file.name, dataUrl});
+        record.hasAttachment = true;
+        record.attachmentName = file.name;
+      }catch(e){ console.error('attachment error', e); alert('تعذر رفع المرفق.'); }
+    }
+  }
+
   await dbSet(moduleKey, STATE[moduleKey]);
   modalState = null;
   render();
+}
+
+async function openAttachment(moduleKey, id){
+  const data = await dbGet('attach_'+moduleKey+'_'+id, null);
+  if(!data){ alert('تعذر العثور على المرفق.'); return; }
+  const a = document.createElement('a');
+  a.href = data.dataUrl;
+  a.download = data.name || 'attachment';
+  a.target = '_blank';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
 }
 
 async function deleteRecord(moduleKey, id){
@@ -843,6 +1228,91 @@ async function saveUser(){
   await dbSet('users', STATE.users);
   modalState = null;
   render();
+}
+
+/* ===================== Activity Log ===================== */
+function activityLogHTML(){
+  const entries = [];
+  for(const key of Object.keys(MODULES)){
+    const list = STATE[key] || [];
+    for(const r of list){
+      if(r.createdByName || r.createdBy){
+        entries.push({date:r.date||r.startDate||'', who:r.createdByName||r.createdBy, action:'إضافة', module:MODULES[key].title});
+      }
+      if(r.updatedByName){
+        entries.push({date:r.date||r.startDate||'', who:r.updatedByName, action:'تعديل', module:MODULES[key].title});
+      }
+    }
+  }
+  const rows = entries.map(e=>`
+    <tr>
+      <td>${escapeHtml(e.module)}</td>
+      <td><span class="badge ${e.action==='إضافة'?'ok':'warn'}">${e.action}</span></td>
+      <td>${escapeHtml(e.who)}</td>
+      <td>${escapeHtml(e.date||'—')}</td>
+    </tr>`).join('');
+  return `
+    <div class="section-note">سجل بكل عمليات الإضافة والتعديل عبر كل أقسام النظام، مرتب حسب القسم.</div>
+    <div class="toolbar no-print"><div></div><button class="btn btn-ghost" onclick="window.print()">🖨️ طباعة</button></div>
+    <table>
+      <thead><tr><th>القسم</th><th>العملية</th><th>بواسطة</th><th>تاريخ السجل</th></tr></thead>
+      <tbody>${rows || `<tr class="empty-row"><td colspan="4">لا توجد عمليات مسجلة بعد</td></tr>`}</tbody>
+    </table>
+  `;
+}
+
+/* ===================== Backup / Restore ===================== */
+async function exportBackup(){
+  const allKeys = ['users', ...Object.keys(MODULES)];
+  const dump = {};
+  for(const k of allKeys){ dump[k] = STATE[k] || []; }
+  const blob = new Blob([JSON.stringify(dump, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'erp-backup-' + todayISO() + '.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function importBackupFile(input){
+  const file = input.files && input.files[0];
+  if(!file) return;
+  if(!confirm('استيراد النسخة الاحتياطية هيستبدل البيانات الحالية في الأقسام الموجودة بالملف. متأكد؟')) { input.value=''; return; }
+  try{
+    const text = await file.text();
+    const dump = JSON.parse(text);
+    for(const key of Object.keys(dump)){
+      STATE[key] = dump[key];
+      await dbSet(key, dump[key]);
+    }
+    alert('تم استرجاع النسخة الاحتياطية بنجاح.');
+    render();
+  }catch(e){
+    console.error(e);
+    alert('تعذرت قراءة الملف — تأكد إنه ملف Backup صحيح.');
+  }
+  input.value = '';
+}
+
+function backupHTML(){
+  return `
+    <div class="section-note">
+      يمكنك تحميل نسخة احتياطية كاملة من كل بيانات النظام كملف JSON، أو استرجاع نسخة سابقة.
+    </div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;">
+      <div class="stat-card" style="flex:1;min-width:240px;">
+        <div class="l" style="margin-bottom:10px;">تنزيل نسخة احتياطية من كل البيانات</div>
+        <button class="btn btn-amber" onclick="exportBackup()">⬇️ تحميل Backup</button>
+      </div>
+      <div class="stat-card" style="flex:1;min-width:240px;">
+        <div class="l" style="margin-bottom:10px;">استرجاع نسخة احتياطية (ملف JSON)</div>
+        <input type="file" accept="application/json" onchange="importBackupFile(this)">
+      </div>
+    </div>
+  `;
 }
 
 /* ===================== Render root ===================== */
